@@ -5,9 +5,9 @@
 ## 服务器目录
 
 ```text
-/www/wwwroot/juqing-skill/
-/www/wwwroot/juqing-skill-data/
-/www/wwwroot/juqing-skill-workflows/
+/www/wwwroot/juqing.073955.com/
+/www/wwwroot/juqing.073955.com/data/
+/www/wwwroot/juqing.073955.com/workflows/
   reverse-to-drama-commerce.md
   seedance-drama-container.md
 ```
@@ -17,7 +17,7 @@
 ## 启动服务
 
 ```bash
-cd /www/wwwroot/juqing-skill
+cd /www/wwwroot/juqing.073955.com
 npm ci --omit=dev
 cp .env.example .env
 nano .env
