@@ -1,0 +1,8 @@
+{
+  "version": "0.1.0",
+  "promptSource": "https://your-domain.example/codex/juqing-skill/manifest.json",
+  "promptPackage": "https://your-domain.example/codex/juqing-skill/prompt.zip",
+  "signature": "https://your-domain.example/codex/juqing-skill/signature.txt",
+  "authEndpoint": "https://your-domain.example/codex/auth/verify",
+  "cacheTtlHours": 24
+}
