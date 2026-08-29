@@ -2,7 +2,7 @@
   "mcpServers": {
     "juqing-skill": {
       "type": "http",
-      "url": "https://your-domain.example/mcp"
+      "url": "https://juqing.073955.com/mcp"
     }
   }
 }

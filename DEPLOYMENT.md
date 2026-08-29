@@ -32,6 +32,6 @@ npm start
 curl https://your-domain.example/healthz
 ```
 
-返回 `{"ok":true}` 后，把插件中的 MCP 地址改为 `https://your-domain.example/mcp`，再提交 GitHub。
+返回 `{"ok":true}` 后，把插件中的 MCP 地址设置为 `https://juqing.073955.com/mcp`，再提交 GitHub。
 
-管理后台地址为 `https://your-domain.example/admin`，浏览器会弹出 Basic Auth，用户名固定为 `admin`，密码是 `.env` 中的 `ADMIN_API_KEY`。
+管理后台地址为 `https://juqing.073955.com/admin`，浏览器会弹出 Basic Auth，用户名固定为 `admin`，密码是 `.env` 中的 `ADMIN_API_KEY`。
