@@ -10,6 +10,7 @@ This skill is only a thin entry point.
 - Connect to the remote authorization and workflow service first.
 - The actual workflow content lives on the server, not in this plugin package.
 - If the service is updated, the marketplace plugin stays unchanged.
+- After this skill is selected, call the `get_reverse_to_drama_commerce_workflow` MCP tool before doing the requested work. This first call starts authorization when needed.
 
 ## 启动词
 

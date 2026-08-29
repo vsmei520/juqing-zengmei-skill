@@ -10,6 +10,7 @@ This skill is only a thin entry point.
 - Verify authorization through the remote service first.
 - The actual production workflow lives on the server, not in this plugin package.
 - Marketplace updates only need to refresh the thin plugin shell.
+- After this skill is selected, call the `get_seedance_drama_container_workflow` MCP tool before doing the requested work. This first call starts authorization when needed.
 
 ## 启动词
 

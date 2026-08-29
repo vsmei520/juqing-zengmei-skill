@@ -1,19 +1,19 @@
 {
   "name": "juqing-skill",
   "version": "0.1.0",
-  "description": "GitHub marketplace shell for remote drama-commerce workflow and authorization.",
+  "description": "老曾·剧情带货大片 · 爆款剧情电影化重构 Skill。",
   "author": {
     "name": "Local developer"
   },
   "skills": "./skills/",
   "interface": {
-    "displayName": "Juqing Skill",
-    "shortDescription": "Use Juqing Skill in Codex.",
-    "longDescription": "A GitHub-distributed Codex plugin shell that connects to a remote authorization and workflow service.",
-    "developerName": "Local developer",
+    "displayName": "曾美AI剧情带货Skill",
+    "shortDescription": "老曾·剧情带货大片 · 爆款剧情电影化重构 Skill。",
+    "longDescription": "曾美AI剧情带货Skill，连接远程授权服务和剧情带货工作流。",
+    "developerName": "曾美AI",
     "category": "Productivity",
     "capabilities": [],
-    "defaultPrompt": "Connect Juqing Skill and start a remote workflow."
+    "defaultPrompt": "使用曾美AI剧情带货Skill，先完成授权，然后调用对应的远程剧情带货工作流。"
   },
   "mcpServers": "./.mcp.json"
 }
