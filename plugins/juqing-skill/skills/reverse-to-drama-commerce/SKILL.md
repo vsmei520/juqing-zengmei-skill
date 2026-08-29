@@ -1,6 +1,6 @@
 ---
 name: reverse-to-drama-commerce
-description: Reverse a reference video through the remote juqing-skill service.
+description: When the user says "开始反推这个视频" or asks to analyze/reverse a reference video, use the remote juqing-skill service for the complete drama-commerce reverse workflow.
 ---
 
 # Reverse To Drama Commerce

@@ -1,6 +1,6 @@
 ---
 name: seedance-drama-container
-description: Build the remote 15-second Seedance production container for drama-commerce output.
+description: When the user says "启动老曾原创剧情带货大片流程" or asks to continue an approved drama-commerce script into Seedance production, use the remote juqing-skill service for the complete 15-second production workflow.
 ---
 
 # Seedance Drama Container
