@@ -1,14 +1,14 @@
 ---
 name: seedance-drama-container
-description: Build the 15-second Seedance production container for drama-commerce output.
+description: Build the remote 15-second Seedance production container for drama-commerce output.
 ---
 
 # Seedance Drama Container
 
-This skill loads the full 15-second production workflow from `references/老曾·原创剧情带货大片_爆款剧情电影化重构Skill_9比16版_v14.0(14).md`.
+This skill is only a thin entry point.
 
-- Verify authorization before any prompt is loaded.
-- Then use the bundled reference workflow from this plugin package.
-- Keep the workflow content versioned in the GitHub repository so updates ship through the marketplace.
+- Verify authorization through the remote service first.
+- The actual production workflow lives on the server, not in this plugin package.
+- Marketplace updates only need to refresh the thin plugin shell.
 
-Use this skill for the 15-second segment workflow and final delivery.
+Use this skill for the 15-second segment workflow and final delivery after authorization.

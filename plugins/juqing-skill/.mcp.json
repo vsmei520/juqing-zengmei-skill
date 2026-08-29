@@ -1,3 +1,8 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "juqing-skill": {
+      "type": "http",
+      "url": "https://your-domain.example/mcp"
+    }
+  }
 }

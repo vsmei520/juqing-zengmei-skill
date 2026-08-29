@@ -1,7 +1,7 @@
 {
   "name": "juqing-skill",
   "version": "0.1.0",
-  "description": "GitHub marketplace plugin for drama-commerce reverse engineering and Seedance generation.",
+  "description": "GitHub marketplace shell for remote drama-commerce workflow and authorization.",
   "author": {
     "name": "Local developer"
   },
@@ -9,11 +9,11 @@
   "interface": {
     "displayName": "Juqing Skill",
     "shortDescription": "Use Juqing Skill in Codex.",
-    "longDescription": "A GitHub-distributed Codex plugin for drama-commerce reverse engineering and 15-second Seedance generation.",
+    "longDescription": "A GitHub-distributed Codex plugin shell that connects to a remote authorization and workflow service.",
     "developerName": "Local developer",
     "category": "Productivity",
     "capabilities": [],
-    "defaultPrompt": "Help me use Juqing Skill."
+    "defaultPrompt": "Connect Juqing Skill and start a remote workflow."
   },
   "mcpServers": "./.mcp.json"
 }
