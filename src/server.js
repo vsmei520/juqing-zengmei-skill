@@ -14,7 +14,7 @@ const { requireBearerAuth } = require("@modelcontextprotocol/sdk/server/auth/mid
 const { InvalidTokenError } = require("@modelcontextprotocol/sdk/server/auth/errors.js");
 const { LicenseError, LicenseService, hashSecret } = require("./license-service");
 
-const port = Number(process.env.PORT || 8787);
+const port = Number(process.env.PORT || 18787);
 const host = process.env.HOST || "127.0.0.1";
 const publicBaseUrl = new URL(process.env.PUBLIC_BASE_URL || `http://localhost:${port}`);
 const adminApiKey = process.env.ADMIN_API_KEY || "replace-this-before-deploying";

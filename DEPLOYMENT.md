@@ -24,7 +24,7 @@ nano .env
 npm start
 ```
 
-生产环境必须修改 `PUBLIC_BASE_URL`、`ADMIN_API_KEY`、`DATA_DIR` 和 `WORKFLOW_DIR`。建议用宝塔 Supervisor 或 systemd 保持 Node 进程运行，Nginx 反代到 `127.0.0.1:8787` 并启用 HTTPS。
+生产环境必须修改 `PUBLIC_BASE_URL`、`ADMIN_API_KEY`、`DATA_DIR` 和 `WORKFLOW_DIR`。建议用宝塔 Supervisor 或 systemd 保持 Node 进程运行，Nginx 反代到 `127.0.0.1:18787` 并启用 HTTPS。
 
 ## 验证
 
