@@ -596,20 +596,24 @@ function createApp() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
-  app.get("/admin", requireAdmin, (_req, res) => {
-    res.type("html").send(adminPage());
+  app.get("/admin", requireAdmin, (req, res) => {
+    const notices = {
+      code_created: "兑换码已生成，请在兑换码列表中查看。",
+      grant_completed: "已完成直接授权。",
+      customer_revoked: "授权已撤销，相关设备和令牌已失效。",
+      device_released: "设备绑定已解除，用户下次授权时可绑定新电脑。",
+    };
+    res.type("html").send(adminPage({ result: notices[req.query.notice] || null }));
   });
   app.post("/admin/web/codes", requireAdmin, (req, res) => {
     try {
-      const created = licenseService.createActivationCode({
+      licenseService.createActivationCode({
         product: req.body.product,
         expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt).toISOString() : null,
         maxRedemptions: Number(req.body.maxRedemptions),
         note: req.body.note || "",
       });
-      res.type("html").send(adminPage({
-        result: `兑换码已生成：<code>${created.code}</code>`,
-      }));
+      res.redirect("/admin?notice=code_created");
     } catch (error) {
       res.status(400).type("html").send(adminPage({ error: error.message || "创建兑换码失败。" }));
     }
@@ -617,7 +621,7 @@ function createApp() {
   app.post("/admin/web/grants", requireAdmin, (req, res) => {
     try {
       licenseService.grant(req.body);
-      res.type("html").send(adminPage({ result: "已完成直接授权。" }));
+      res.redirect("/admin?notice=grant_completed");
     } catch (error) {
       res.status(400).type("html").send(adminPage({ error: error.message || "授权失败。" }));
     }
@@ -625,7 +629,7 @@ function createApp() {
   app.post("/admin/web/revoke", requireAdmin, (req, res) => {
     try {
       licenseService.revokeCustomer(req.body);
-      res.type("html").send(adminPage({ result: "授权已撤销，相关设备和令牌已失效。" }));
+      res.redirect("/admin?notice=customer_revoked");
     } catch (error) {
       res.status(400).type("html").send(adminPage({ error: error.message || "撤销失败。" }));
     }
@@ -633,7 +637,7 @@ function createApp() {
   app.post("/admin/web/release-device", requireAdmin, (req, res) => {
     try {
       licenseService.releaseDevice(req.body);
-      res.type("html").send(adminPage({ result: "设备绑定已解除，用户下次授权时可绑定新电脑。" }));
+      res.redirect("/admin?notice=device_released");
     } catch (error) {
       res.status(400).type("html").send(adminPage({ error: error.message || "解绑失败。" }));
     }
