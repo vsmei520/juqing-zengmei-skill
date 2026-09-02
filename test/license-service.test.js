@@ -58,6 +58,26 @@ test("allows a new device after administrative release", () => {
   assert.equal(service.listActivationCodes()[0].redemptions, 1);
 });
 
+test("migrates a legacy browser cookie device to the OAuth client device", () => {
+  const service = createService();
+  const { code } = service.createActivationCode({ product: "permanent" });
+  service.redeem({ phone: "13700137001", code });
+  const legacyDevice = service.activateDevice({
+    phone: "13700137001",
+    browserDeviceId: "legacy-browser-cookie",
+    label: "Codex 电脑",
+  });
+
+  const migratedDevice = service.activateDevice({
+    phone: "13700137001",
+    browserDeviceId: "oauth-client:stable-client-id",
+    label: "Codex 电脑",
+  });
+
+  assert.equal(migratedDevice.id, legacyDevice.id);
+  assert.equal(migratedDevice.browser_device_id, "oauth-client:stable-client-id");
+});
+
 test("does not allow a second phone to reuse an activated code", () => {
   const service = createService();
   const { code } = service.createActivationCode({ product: "permanent" });

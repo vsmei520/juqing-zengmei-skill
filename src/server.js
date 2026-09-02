@@ -35,6 +35,10 @@ function randomToken() {
   return randomBytes(32).toString("base64url");
 }
 
+function deviceIdForOAuthClient(clientId) {
+  return `oauth-client:${hashSecret(clientId)}`;
+}
+
 function errorResponse(res, error) {
   const status = error instanceof LicenseError ? 400 : 500;
   res.status(status).json({ error: error.code || "internal_error", message: error.message || "服务器错误。" });
@@ -243,17 +247,6 @@ function adminPage({ result = null, error = null } = {}) {
 </html>`;
 }
 
-function cookieParser(req, _res, next) {
-  req.cookies = Object.fromEntries(
-    (req.headers.cookie || "")
-      .split(";")
-      .map((part) => part.trim().split("="))
-      .filter(([key, value]) => key && value)
-      .map(([key, value]) => [key, decodeURIComponent(value)])
-  );
-  next();
-}
-
 class DevelopmentSmsProvider {
   constructor() {
     this.challenges = new Map();
@@ -370,14 +363,6 @@ class OAuthProvider {
       new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       new Date().toISOString()
     );
-    const browserDeviceId = res.req?.cookies?.juqing_device_id || randomUUID();
-    res.cookie("juqing_device_id", browserDeviceId, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: this.baseUrl.protocol === "https:",
-      maxAge: 365 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
     const authorizationForm = this.authenticationMode === "redeem_only"
       ? `
   <p>首次使用请输入手机号和兑换码。已激活或已解绑设备的用户可不填兑换码，直接继续授权。</p>
@@ -416,14 +401,18 @@ class OAuthProvider {
 </body></html>`);
   }
 
-  async completeAuthorization({ flowId, phone, browserDeviceId, label }) {
+  async completeAuthorization({ flowId, phone, label }) {
     const flow = this.service.db.prepare(`
       SELECT * FROM oauth_flows WHERE id = ? AND used_at IS NULL AND expires_at > ?
     `).get(flowId, new Date().toISOString());
     if (!flow) throw new LicenseError("expired_authorization", "授权请求已过期，请返回 Codex 后重试。");
     const client = await this.clientsStore.getClient(flow.client_id);
     const params = JSON.parse(flow.params);
-    const device = this.service.activateDevice({ phone, browserDeviceId, label });
+    const device = this.service.activateDevice({
+      phone,
+      browserDeviceId: deviceIdForOAuthClient(client.client_id),
+      label,
+    });
     const code = randomToken();
     this.service.db.prepare(`
       INSERT INTO oauth_authorization_codes
@@ -592,7 +581,7 @@ function createApp() {
     host,
     allowedHosts: [...new Set([publicBaseUrl.hostname, "localhost", "127.0.0.1", "[::1]"])],
   });
-  app.use(cookieParser);
+  app.set("trust proxy", 1);
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
@@ -677,7 +666,6 @@ function createApp() {
       provider.completeAuthorization({
         flowId: req.body.flow_id,
         phone: req.body.phone,
-        browserDeviceId: req.cookies?.juqing_device_id || req.cookies?.rsav_device || randomUUID(),
         label: req.body.device_label,
       }).then((target) => res.redirect(target)).catch((error) => errorResponse(res, error));
     } catch (error) {

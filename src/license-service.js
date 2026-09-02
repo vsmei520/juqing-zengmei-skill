@@ -186,6 +186,12 @@ class LicenseService {
 
     const activeDevice = this.db.prepare("SELECT * FROM devices WHERE customer_id = ? AND revoked_at IS NULL").get(customer.id);
     if (activeDevice) {
+      if (browserDeviceId.startsWith("oauth-client:") && !activeDevice.browser_device_id.startsWith("oauth-client:")) {
+        this.db.prepare("UPDATE devices SET browser_device_id = ?, label = ?, last_seen_at = ? WHERE id = ?")
+          .run(browserDeviceId, label || activeDevice.label, nowIso(), activeDevice.id);
+        this.audit(customer.id, "device_binding_migrated", JSON.stringify({ deviceId: activeDevice.id }));
+        return this.db.prepare("SELECT * FROM devices WHERE id = ?").get(activeDevice.id);
+      }
       const earliestTransferAt = addDays(activeDevice.activated_at, 90);
       if (new Date(earliestTransferAt) > new Date()) {
         throw new LicenseError("device_limit", `当前授权已绑定一台电脑，最早可在 ${earliestTransferAt.slice(0, 10)} 自助换机。`);
