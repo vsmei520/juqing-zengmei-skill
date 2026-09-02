@@ -370,8 +370,8 @@ class OAuthProvider {
       new Date(Date.now() + 10 * 60 * 1000).toISOString(),
       new Date().toISOString()
     );
-    const browserDeviceId = randomUUID();
-    res.cookie("rsav_device", browserDeviceId, {
+    const browserDeviceId = res.req?.cookies?.juqing_device_id || randomUUID();
+    res.cookie("juqing_device_id", browserDeviceId, {
       httpOnly: true,
       sameSite: "lax",
       secure: this.baseUrl.protocol === "https:",
@@ -380,11 +380,11 @@ class OAuthProvider {
     });
     const authorizationForm = this.authenticationMode === "redeem_only"
       ? `
-  <p>请输入手机号和兑换码激活。兑换码仅可使用一次，激活后会绑定当前电脑。</p>
+  <p>首次使用请输入手机号和兑换码。已激活或已解绑设备的用户可不填兑换码，直接继续授权。</p>
   <form method="post" action="/authorization/complete">
     <input type="hidden" name="flow_id" value="${flowId}">
     <label>手机号<br><input name="phone" inputmode="numeric" pattern="1[0-9]{10}" required></label><br><br>
-    <label>兑换码<br><input name="activation_code" autocomplete="off" required></label><br><br>
+    <label>兑换码（首次必填；已激活用户可留空）<br><input name="activation_code" autocomplete="off"></label><br><br>
     <label>设备名称<br><input name="device_label" value="Codex 电脑"></label><br><br>
     <button type="submit">激活并继续</button>
   </form>`
@@ -671,13 +671,13 @@ function createApp() {
       if (!hasEntitlement && !req.body.activation_code) {
         throw new LicenseError("activation_code_required", "请输入兑换码。");
       }
-      if (req.body.activation_code) {
+      if (!hasEntitlement && req.body.activation_code) {
         licenseService.redeem({ phone: req.body.phone, code: req.body.activation_code });
       }
       provider.completeAuthorization({
         flowId: req.body.flow_id,
         phone: req.body.phone,
-        browserDeviceId: req.cookies?.rsav_device || randomUUID(),
+        browserDeviceId: req.cookies?.juqing_device_id || req.cookies?.rsav_device || randomUUID(),
         label: req.body.device_label,
       }).then((target) => res.redirect(target)).catch((error) => errorResponse(res, error));
     } catch (error) {

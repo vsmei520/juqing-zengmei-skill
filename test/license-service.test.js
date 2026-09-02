@@ -51,9 +51,22 @@ test("allows a new device after administrative release", () => {
   service.redeem({ phone: "13700137000", code });
   service.activateDevice({ phone: "13700137000", browserDeviceId: "device-a" });
   service.releaseDevice({ phone: "13700137000" });
+  service.redeem({ phone: "13700137000", code });
   service.activateDevice({ phone: "13700137000", browserDeviceId: "device-b" });
 
   assert.equal(service.getAccess("13700137000", "device-b").device.browser_device_id, "device-b");
+  assert.equal(service.listActivationCodes()[0].redemptions, 1);
+});
+
+test("does not allow a second phone to reuse an activated code", () => {
+  const service = createService();
+  const { code } = service.createActivationCode({ product: "permanent" });
+  service.redeem({ phone: "13400134000", code });
+
+  assert.throws(
+    () => service.redeem({ phone: "13300133000", code }),
+    (error) => error instanceof LicenseError && error.code === "used_code",
+  );
 });
 
 test("revocation removes access", () => {

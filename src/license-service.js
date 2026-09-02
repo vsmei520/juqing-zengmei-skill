@@ -153,6 +153,10 @@ class LicenseService {
     if (!activationCode || activationCode.revoked_at) {
       throw new LicenseError("invalid_code", "兑换码无效或已撤销。");
     }
+    const existingEntitlement = this.findActiveEntitlementBySource(customer.id, activationCode.id);
+    if (existingEntitlement) {
+      return existingEntitlement;
+    }
     if (activationCode.expires_at && new Date(activationCode.expires_at) <= new Date()) {
       throw new LicenseError("expired_code", "兑换码已过期。");
     }
@@ -312,6 +316,16 @@ class LicenseService {
       ORDER BY CASE WHEN product = 'permanent' THEN 1 ELSE 0 END DESC, ends_at DESC
       LIMIT 1
     `).get(customerId, nowIso());
+  }
+
+  findActiveEntitlementBySource(customerId, sourceId) {
+    return this.db.prepare(`
+      SELECT * FROM entitlements
+      WHERE customer_id = ? AND source = 'code' AND source_id = ? AND revoked_at IS NULL
+        AND (ends_at IS NULL OR ends_at > ?)
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).get(customerId, sourceId, nowIso());
   }
 
   hasActiveEntitlement(customerId) {
