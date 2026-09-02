@@ -1,9 +1,8 @@
-require("dotenv").config();
-
 const express = require("express");
 const { randomBytes, randomUUID, createHash, timingSafeEqual } = require("node:crypto");
 const { readFileSync } = require("node:fs");
 const { join, resolve } = require("node:path");
+require("dotenv").config({ path: join(__dirname, "..", ".env") });
 const DysmsapiClient = require("@alicloud/dysmsapi20170525").default;
 const { SendSmsRequest } = require("@alicloud/dysmsapi20170525");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
@@ -19,8 +18,9 @@ const host = process.env.HOST || "127.0.0.1";
 const publicBaseUrl = new URL(process.env.PUBLIC_BASE_URL || `http://localhost:${port}`);
 const adminApiKey = process.env.ADMIN_API_KEY || "replace-this-before-deploying";
 const authMode = process.env.AUTH_MODE || "sms";
-const dataDir = resolve(process.env.DATA_DIR || join(process.cwd(), "data"));
-const workflowDir = resolve(process.env.WORKFLOW_DIR || join(process.cwd(), "workflows"));
+const serviceRoot = resolve(__dirname, "..");
+const dataDir = resolve(process.env.DATA_DIR || join(serviceRoot, "data"));
+const workflowDir = resolve(process.env.WORKFLOW_DIR || join(serviceRoot, "workflows"));
 const licenseService = new LicenseService(join(dataDir, "licenses.sqlite"));
 const workflowFiles = {
   reverseToDramaCommerce: join(workflowDir, "reverse-to-drama-commerce.md"),
