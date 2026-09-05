@@ -2,7 +2,14 @@
   "mcpServers": {
     "juqing-skill": {
       "type": "http",
-      "url": "https://juqing.073955.com/mcp"
+      "url": "https://juqing.073955.com/mcp",
+      "auth": "oauth",
+      "enabled_tools": [
+        "get_reverse_to_drama_commerce_workflow",
+        "get_seedance_drama_container_workflow"
+      ],
+      "startup_timeout_sec": 20,
+      "tool_timeout_sec": 120
     }
   }
 }

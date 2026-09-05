@@ -10,7 +10,7 @@ This skill is only a thin entry point.
 - Verify authorization through the remote service first.
 - The actual production workflow lives on the server, not in this plugin package.
 - Marketplace updates only need to refresh the thin plugin shell.
-- After this skill is selected, call the `get_seedance_drama_container_workflow` MCP tool before doing the requested work. This first call starts authorization when needed.
+- After this skill is selected, use the registered `juqing-skill` MCP tool `get_seedance_drama_container_workflow` before doing the requested work. If the tool is not available in the current Codex tool list, stop and tell the user to reinstall or update the plugin; do not create a manual OAuth client, do not run ad hoc HTTP authorization commands, and do not ask the user to complete a temporary localhost callback flow.
 
 ## 启动词
 
@@ -22,4 +22,4 @@ This skill is only a thin entry point.
 
 授权成功后，使用该 Skill 进入完整剧情重构、剧本确认、字幕表演与 Seedance 交付流程。
 
-Use this skill for the 15-second segment workflow and final delivery after authorization.
+Use this skill for the 15-second segment workflow and final delivery after the registered MCP tool returns the remote workflow.

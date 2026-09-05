@@ -10,7 +10,7 @@ This skill is only a thin entry point.
 - Connect to the remote authorization and workflow service first.
 - The actual workflow content lives on the server, not in this plugin package.
 - If the service is updated, the marketplace plugin stays unchanged.
-- After this skill is selected, call the `get_reverse_to_drama_commerce_workflow` MCP tool before doing the requested work. This first call starts authorization when needed.
+- After this skill is selected, use the registered `juqing-skill` MCP tool `get_reverse_to_drama_commerce_workflow` before doing the requested work. If the tool is not available in the current Codex tool list, stop and tell the user to reinstall or update the plugin; do not create a manual OAuth client, do not run ad hoc HTTP authorization commands, and do not ask the user to complete a temporary localhost callback flow.
 
 ## 启动词
 
@@ -20,4 +20,4 @@ This skill is only a thin entry point.
 
 本启动词只负责启动流程，完整规则、模板、核验和交付格式以服务器端最新工作流为唯一规则源。
 
-Use this skill for the full reverse -> mapping -> rewrite -> delivery flow after authorization.
+Use this skill for the full reverse -> mapping -> rewrite -> delivery flow after the registered MCP tool returns the remote workflow.
