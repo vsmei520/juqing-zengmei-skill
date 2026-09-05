@@ -39,6 +39,18 @@ function deviceIdForOAuthClient(clientId) {
   return `oauth-client:${hashSecret(clientId)}`;
 }
 
+function shortHash(value) {
+  return hashSecret(value).slice(0, 12);
+}
+
+function logOAuthEvent(event, detail) {
+  console.info(JSON.stringify({
+    event,
+    ...detail,
+    at: new Date().toISOString(),
+  }));
+}
+
 function errorResponse(res, error) {
   const status = error instanceof LicenseError ? 400 : 500;
   res.status(status).json({ error: error.code || "internal_error", message: error.message || "服务器错误。" });
@@ -84,6 +96,7 @@ function adminPage({ result = null, error = null } = {}) {
       : "";
   const customers = licenseService.listCustomers();
   const activationCodes = licenseService.listActivationCodes();
+  const auditLogs = licenseService.listAuditLogs(60);
   const productName = {
     permanent: "永久",
     monthly: "月度",
@@ -147,6 +160,14 @@ function adminPage({ result = null, error = null } = {}) {
       </tr>`;
     }).join("")
     : '<tr><td colspan="7" class="empty">暂无兑换码。</td></tr>';
+  const auditRows = auditLogs.length
+    ? auditLogs.map((log) => `<tr>
+        <td>${log.created_at.slice(0, 16).replace("T", " ")}</td>
+        <td>${escapeHtml(log.phone || "-")}</td>
+        <td>${escapeHtml(log.action)}</td>
+        <td><small>${escapeHtml(log.detail)}</small></td>
+      </tr>`).join("")
+    : '<tr><td colspan="4" class="empty">暂无诊断日志。</td></tr>';
   return `<!doctype html>
 <html lang="zh-CN">
 <meta charset="utf-8">
@@ -241,6 +262,13 @@ function adminPage({ result = null, error = null } = {}) {
     <table>
       <thead><tr><th>激活码</th><th>授权类型</th><th>状态</th><th>已用 / 可用</th><th>已激活用户</th><th>截止时间</th><th>备注</th></tr></thead>
       <tbody>${activationCodeRows}</tbody>
+    </table>
+  </section>
+  <section class="activation-codes">
+    <h2>授权诊断日志</h2>
+    <table>
+      <thead><tr><th>时间</th><th>手机号</th><th>事件</th><th>详情</th></tr></thead>
+      <tbody>${auditRows}</tbody>
     </table>
   </section>
 </main>
@@ -413,6 +441,16 @@ class OAuthProvider {
       browserDeviceId: deviceIdForOAuthClient(client.client_id),
       label,
     });
+    this.service.audit(device.customer_id, "oauth_authorization_completed", JSON.stringify({
+      clientIdHash: shortHash(client.client_id),
+      deviceId: device.id,
+      redirectHost: new URL(params.redirectUri).host,
+    }));
+    logOAuthEvent("oauth_authorization_completed", {
+      clientIdHash: shortHash(client.client_id),
+      deviceId: device.id,
+      redirectHost: new URL(params.redirectUri).host,
+    });
     const code = randomToken();
     this.service.db.prepare(`
       INSERT INTO oauth_authorization_codes
@@ -446,29 +484,60 @@ class OAuthProvider {
 
   async exchangeAuthorizationCode(client, authorizationCode) {
     const row = this.getAuthorizationCode(client.client_id, authorizationCode);
-    if (!row) throw new Error("Invalid authorization code");
+    if (!row) {
+      logOAuthEvent("oauth_authorization_code_exchange_failed", { clientIdHash: shortHash(client.client_id) });
+      throw new Error("Invalid authorization code");
+    }
     this.service.db.prepare("UPDATE oauth_authorization_codes SET used_at = ? WHERE id = ?")
       .run(new Date().toISOString(), row.id);
-    return this.issueTokens(client.client_id, row.device_id, JSON.parse(row.scopes), row.resource);
+    const tokens = this.issueTokens(client.client_id, row.device_id, JSON.parse(row.scopes), row.resource);
+    this.auditDevice(row.device_id, "oauth_authorization_code_exchanged", {
+      clientIdHash: shortHash(client.client_id),
+      deviceId: row.device_id,
+    });
+    logOAuthEvent("oauth_authorization_code_exchanged", {
+      clientIdHash: shortHash(client.client_id),
+      deviceId: row.device_id,
+    });
+    return tokens;
   }
 
   async exchangeRefreshToken(client, refreshToken) {
     const token = this.getToken("refresh", refreshToken);
-    if (!token || token.client_id !== client.client_id) throw new Error("Invalid refresh token");
+    if (!token || token.client_id !== client.client_id) {
+      logOAuthEvent("oauth_refresh_failed", { clientIdHash: shortHash(client.client_id) });
+      throw new Error("Invalid refresh token");
+    }
     this.service.db.prepare("UPDATE oauth_tokens SET revoked_at = ? WHERE id = ?")
       .run(new Date().toISOString(), token.id);
-    return this.issueTokens(client.client_id, token.device_id, JSON.parse(token.scopes), token.resource);
+    const tokens = this.issueTokens(client.client_id, token.device_id, JSON.parse(token.scopes), token.resource);
+    this.auditDevice(token.device_id, "oauth_refresh_succeeded", {
+      clientIdHash: shortHash(client.client_id),
+      deviceId: token.device_id,
+    });
+    logOAuthEvent("oauth_refresh_succeeded", {
+      clientIdHash: shortHash(client.client_id),
+      deviceId: token.device_id,
+    });
+    return tokens;
   }
 
   async verifyAccessToken(accessToken) {
     const token = this.getToken("access", accessToken);
-    if (!token) throw new InvalidTokenError("Invalid or expired access token");
+    if (!token) {
+      logOAuthEvent("oauth_access_token_invalid", {});
+      throw new InvalidTokenError("Invalid or expired access token");
+    }
     const device = this.service.db.prepare(`
       SELECT devices.*, customers.phone FROM devices
       JOIN customers ON customers.id = devices.customer_id
       WHERE devices.id = ? AND devices.revoked_at IS NULL
     `).get(token.device_id);
     if (!device || !this.service.hasActiveEntitlement(device.customer_id)) {
+      logOAuthEvent("oauth_access_denied", {
+        clientIdHash: shortHash(token.client_id),
+        deviceId: token.device_id,
+      });
       throw new InvalidTokenError("Device or entitlement is no longer valid");
     }
     this.service.touchDevice(device.id);
@@ -489,6 +558,13 @@ class OAuthProvider {
     if (token) {
       this.service.db.prepare("UPDATE oauth_tokens SET revoked_at = ? WHERE id = ?")
         .run(new Date().toISOString(), token.id);
+    }
+  }
+
+  auditDevice(deviceId, action, detail) {
+    const device = this.service.db.prepare("SELECT customer_id FROM devices WHERE id = ?").get(deviceId);
+    if (device) {
+      this.service.audit(device.customer_id, action, JSON.stringify(detail));
     }
   }
 

@@ -314,6 +314,16 @@ class LicenseService {
     `).all();
   }
 
+  listAuditLogs(limit = 50) {
+    return this.db.prepare(`
+      SELECT audit_log.action, audit_log.detail, audit_log.created_at, customers.phone
+      FROM audit_log
+      LEFT JOIN customers ON customers.id = audit_log.customer_id
+      ORDER BY audit_log.created_at DESC
+      LIMIT ?
+    `).all(limit);
+  }
+
   activeEntitlement(customerId) {
     return this.db.prepare(`
       SELECT * FROM entitlements
